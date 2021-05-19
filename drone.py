@@ -69,23 +69,23 @@ def config_drone(nb_drone,charge_time):
 
 #fonction principale qui va nous retourner le temps de construction du mur 
 #cf le fichier notion pour connaître la signification des variables
-def main(p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist,vit_drone,charge_time,rau_beton,bat_capacity,bat_discharge,avg_amp):
+def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,vit_drone,charge_time,bat_capacity,bat_discharge,avg_amp):
     #initiatilisation des variables
-    temps,volume = 0,0                                                                     # initialisation du temps et du volume du béton 
+    temps,poids = 0,0                                                                     # initialisation du temps et du volume du béton 
     travel_time = 0.06  #time_construc(dist,vit_drone)                                            # temps de parcourt entre le béton et le mur (ou l'inverse, juste un aller)
     autonomie = 7.92    #drone_auto(bat_capacity,bat_discharge,avg_amp)                             # autonomie du drone 
     p_beton = p_max_drone-(p_drone+p_parachute+p_sys)                                      # le poids en béton que le drone peut soulever
-    v_beton  = p_beton/rau_beton                                                           # volume de béton qu'un drone peut soulever
+
     list_drone = config_drone(nb_drone,charge_time)                                          # nous donne une liste avec les drones comme ça on pourra direct appeler le drone
     # nous donnes les informations capitales qui vont nous permettre de faire notre calcul
-    print(f"Les différentes informations sont :\nLe temps séparant le mur au béton {travel_time}\nle volume de béton {v_beton}\nune autonomie de {autonomie}\n")
+    print(f"Les différentes informations sont :\nLe temps séparant le mur au béton {travel_time}\nle poids de béton {poids_contruction}\nune autonomie de {autonomie}\n")
 
     for drone in list_drone :
         print(drone.action_time)
 
 
     # logique principale
-    while volume <= volume_construction:
+    while poids <= poids_contruction:
 
         #après l'aller-retour on check voir si le drone peut en refaire un autre pour déposer du ciment
         if nb_drone%3 == 0 :                                                               # cas le nombre de drone est un multiple de 3 
@@ -140,7 +140,7 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist
         for drone in list_drone:                                                           # on détermine le nombre de drone actif 
             if drone.state :
                 active_drone+=1 
-        volume += active_drone*v_beton                                                     # on ajoute le volume de béton nécessaire 
+        poids += active_drone*p_beton                                                     # on ajoute le poids de béton nécessaire 
     
 
         #mise à jour du temps pour tous le monde peu importe l'état du drone
@@ -149,7 +149,7 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist
             drone.action_time = round(drone.action_time,2) 
 
         if active_drone != 0 : 
-            print("La valeur du temps "+colored(temps,"green") +" et celle du béton est "+colored(volume,"green") +" le nombre de drone actif est "+colored(active_drone,"green")) 
+            print("La valeur du temps "+colored(temps,"green") +" et celle du béton est "+colored(poids,"green") +" le nombre de drone actif est "+colored(active_drone,"green")) 
             test = ""
             for k in range(len(list_drone)) :
                 test += str(k)+" " +str(list_drone[k].state)+ " "
@@ -157,11 +157,11 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist
             print("\n\n")
     return temps 
 
-"p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist,vit_drone,charge_time,rau_beton,bat_capacity,bat_discharge,avg_amp"
+"p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,vit_drone,charge_time,rau_beton,bat_capacity,bat_discharge,avg_amp"
 """#toutes les unités sont selon le truc du système international
 dist = 5 #m
 rau_beton = 2400 #Kg/m^3 https://travauxbeton.fr/densite-ciment/ 
 volume_contruction = 1 #m^3 """
 
 
-print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,0.2,4,5,5,30,2000,0,0,0)))
+print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,400,4,5,5,30,0,0,0)))
