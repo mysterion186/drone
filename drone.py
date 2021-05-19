@@ -1,4 +1,4 @@
-from termcolor import colored
+from termcolor import colored #pour faciliter la lecture sinon c'est trop dur de lire 
 
 
 
