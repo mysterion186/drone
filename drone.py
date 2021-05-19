@@ -11,11 +11,7 @@ class Drone :
     #inverse l'état du drone
     def toggle_state(self):
         self.state = not self.state
-    
-    #renvoir True si on ne peut pas faire d'aller retour, False si on peut
-    def not_reachable(self,drone_autonomie,travel_time):
-        return drone_autonomie <= self.action_time + 2*travel_time
-    
+       
     #réinitialise action_time
     def reset_time(self):
         self.action_time = 0
@@ -76,8 +72,8 @@ def config_drone(nb_drone,charge_time):
 def main(p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist,vit_drone,charge_time,rau_beton,bat_capacity,bat_discharge,avg_amp):
     #initiatilisation des variables
     temps,volume = 0,0                                                                     # initialisation du temps et du volume du béton 
-    travel_time = 0.06 #time_construc(dist,vit_drone)                                            # temps de parcourt entre le béton et le mur (ou l'inverse, juste un aller)
-    autonomie = 7.92 #drone_auto(bat_capacity,bat_discharge,avg_amp)                             # autonomie du drone 
+    travel_time = 0.06  #time_construc(dist,vit_drone)                                            # temps de parcourt entre le béton et le mur (ou l'inverse, juste un aller)
+    autonomie = 7.92    #drone_auto(bat_capacity,bat_discharge,avg_amp)                             # autonomie du drone 
     p_beton = p_max_drone-(p_drone+p_parachute+p_sys)                                      # le poids en béton que le drone peut soulever
     v_beton  = p_beton/rau_beton                                                           # volume de béton qu'un drone peut soulever
     list_drone = config_drone(nb_drone,charge_time)                                          # nous donne une liste avec les drones comme ça on pourra direct appeler le drone
@@ -145,6 +141,7 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,volume_construction,nb_drone,dist
             if drone.state :
                 active_drone+=1 
         volume += active_drone*v_beton                                                     # on ajoute le volume de béton nécessaire 
+    
 
         #mise à jour du temps pour tous le monde peu importe l'état du drone
         for drone in list_drone :
@@ -166,16 +163,5 @@ dist = 5 #m
 rau_beton = 2400 #Kg/m^3 https://travauxbeton.fr/densite-ciment/ 
 volume_contruction = 1 #m^3 """
 
-print("Le temps pour construire le mur est ",main(1.50,2,0,0,400,4,5,5,30,1,0,0,0))
-# list_drone = [1,2,3,4]
-# for drone in list_drone[int(len(list_drone)/2):] :
-#     print(drone)
-test = 37.91999999999996 
-# print(round(test,2))
-# print(7.92 <= 7.8+0.12)
 
-# temps = 0
-
-# for poids in range(1,67):
-#     temps+=0.12
-#     print(f"action_time = {round(temps,2)} et poids = {poids}")
+print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,0.2,4,5,5,30,2000,0,0,0)))
