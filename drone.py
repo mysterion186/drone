@@ -48,6 +48,25 @@ def config_paire(nb_drone,charge_time):
         drone.action_time = charge_time
     return list_drone
 
+#retourne directement un nombre paire ou un multiple 
+def get_paire_or_mult(nb,config):
+    if config == "config_1": # cas on envoie la moitié et inversement
+        if nb%2 == 0 :
+            return nb
+        else :  # cas il est impaire 
+            return nb-1 
+    else : # cas on coupe les drones en 2-3 groupes selon la valeur du nb de drone
+        if nb%3 == 0 :
+            return nb
+        else : 
+            #si nb_drone est impaire on le transforme en un nombre paire
+            if nb_drone%2 !=0 : # cas nb impaire
+                return nb-1
+            else : # cas nb paire 
+                return nb 
+            
+
+    return nb
 #retourne une liste de configuration optimale de drone
 #soit nb_drone est un multiple de 3 soit un nombre paire (si impair on le transforme en nb pair)
 def config_drone(nb_drone,charge_time):
@@ -65,39 +84,67 @@ def config_drone(nb_drone,charge_time):
                 list_drone = config_paire(nb_drone,charge_time)
         else :
             list_drone = config_paire(nb_drone,charge_time)
-    return list_drone 
+    return list_drone, nb_drone
 
 #fonction principale qui va nous retourner le temps de construction du mur 
 #cf le fichier notion pour connaître la signification des variables
-def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,vit_drone,charge_time,bat_capacity,bat_discharge,avg_amp):
+def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,vit_drone,charge_time,autonomie,config):
     #initiatilisation des variables
     temps,poids = 0,0                                                                     # initialisation du temps et du volume du béton 
     travel_time = 0.06  #time_construc(dist,vit_drone)                                            # temps de parcourt entre le béton et le mur (ou l'inverse, juste un aller)
-    autonomie = 7.92    #drone_auto(bat_capacity,bat_discharge,avg_amp)                             # autonomie du drone 
+    autonomie = autonomie    #drone_auto(bat_capacity,bat_discharge,avg_amp)                             # autonomie du drone 
     p_beton = p_max_drone-(p_drone+p_parachute+p_sys)                                      # le poids en béton que le drone peut soulever
-
-    list_drone = config_drone(nb_drone,charge_time)                                          # nous donne une liste avec les drones comme ça on pourra direct appeler le drone
+    
+    if config == "config_1" :
+        nb_drone = get_paire_or_mult(nb_drone,config)                                      #si on est dans le cas config 1 on essayer d'avoir un truc paire
+        list_drone = config_paire(nb_drone,charge_time)
+    else : 
+        list_drone,nb_drone = config_drone(nb_drone,charge_time)                                   # nous donne une liste avec les drones comme ça on pourra direct appeler le drone
     # nous donnes les informations capitales qui vont nous permettre de faire notre calcul
-    print(f"Les différentes informations sont :\nLe temps séparant le mur au béton {travel_time}\nle poids de béton {poids_contruction}\nune autonomie de {autonomie}\n")
 
-    for drone in list_drone :
-        print(drone.action_time)
-
+    # print(f"Les différentes informations sont :\nLe temps séparant le mur au béton {travel_time}\nle poids de béton {poids_contruction}\nune autonomie de {autonomie}\n")
 
     # logique principale
     while poids <= poids_contruction:
 
         #après l'aller-retour on check voir si le drone peut en refaire un autre pour déposer du ciment
-        if nb_drone%3 == 0 :                                                               # cas le nombre de drone est un multiple de 3 
-            pass
+        if nb_drone%3 == 0 and config != "config_1": # cas le nombre de drone est un multiple de 3 + on est dans la config 2 
+            if list_drone[0].state :  # cas premier tiers en fonctionnement
+                if list_drone[0].action_time >= autonomie/2 and not list_drone[int(nb_drone/3)].state : # le groupe 1 ne peut qu'activer le groupe 2 
+                    for drone in list_drone[int(nb_drone/3):int((2*nb_drone)/3)] : 
+                        drone.toggle_state()
+                        drone.reset_time() 
+                if list_drone[0].action_time >= autonomie: # si on a dépassé l'autonomie du drone on l'envoie se recharger
+                    for k in range(len(list_drone)) :
+                        if k < int(nb_drone/3) or k>=int((2*nb_drone)/3):  # on éteint les drone du premier tier et on active ceux du dernier
+                            list_drone[k].toggle_state()
+                            list_drone[k].reset_time() 
+            elif list_drone[-1].state:
+                if list_drone[-1].action_time >= autonomie/2 and list_drone[int(nb_drone/3)].state : # le groupe 3 ne peut que désactiver le groupe 2 
+                    for drone in list_drone[int(nb_drone/3):int((2*nb_drone)/3)] : #
+                        drone.toggle_state()
+                        drone.reset_time()  
+                if list_drone[-1].action_time >= autonomie :
+                    for k in range(len(list_drone)):
+                        if k>= int((2*nb_drone)/3):  # on allume les drone du premier tier et on éteint ceux du dernier
+                            list_drone[k].toggle_state()
+                            list_drone[k].reset_time() 
+            
+            elif not list_drone[0].state : # cas on attend que le groupe 1 se recharge les autres font suivre car il y a tjs le même écart entre chaque groupe 
+                if list_drone[0].action_time >= charge_time :
+                    for drone  in list_drone[0:int(len(list_drone)/3)] :
+                        drone.toggle_state()
+                        drone.reset_time()
 
-        else :                                                                                   # pas la peine d'être plus précis, car list_drone sera forcément paire
+        else :                                                                                  
             if list_drone[0].state :                                                             # si c'est le groupe 1 qui est actif 
-                print(f"On est dans le cas où le groupe 1 est actif et action time vaut "+colored(list_drone[0].action_time,"red"))
+                
+                # print(f"On est dans le cas où le groupe 1 est actif et action time vaut "+colored(list_drone[0].action_time,"red"))
+
                 if  list_drone[0].action_time >= autonomie :#list_drone[0].not_reachable(autonomie,travel_time) : #list_drone[0].action_time >= 2*travel_time
                     for i in range(len(list_drone)) :
                         #si les drones sont rechargé alors seulement on les envoie construire le mur
-                        if i >= int(len(list_drone)/2) :                                   # faire des tests pour voir si c'est une inégalité stricte ou pas
+                        if i >= int(len(list_drone)/2) :                                   
                             if  list_drone[i].action_time >= charge_time:                  # si le drone est chargé on peut l'envoyer en mission
                                 list_drone[i].toggle_state()
                                 list_drone[i].reset_time()
@@ -106,8 +153,9 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,v
                             list_drone[i].reset_time()  
                             
             elif list_drone[-1].state:                                                           # si c'est le groupe 2 qui est actif 
-                print(f"On est dans le cas où le groupe 2 est actif et action time vaut "+colored(list_drone[-1].action_time,"red"))
-                # print("test 2",list_drone[-1].action_time+2*travel_time)
+
+                # print(f"On est dans le cas où le groupe 2 est actif et action time vaut "+colored(list_drone[-1].action_time,"red"))
+
                 if list_drone[-1].action_time >= autonomie : #list_drone[-1].not_reachable(autonomie,travel_time) : 
                     for i in range(len(list_drone)) :
                         
@@ -116,14 +164,11 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,v
                             if  list_drone[i].action_time >= charge_time:                  # si le drone est chargé on peut l'envoyer en mission
                                 list_drone[i].toggle_state()
                                 list_drone[i].reset_time()
-                                print(f"if du rechargé")
-                            # print("dans le if ")
                         else : 
                             list_drone[i].toggle_state()
                             list_drone[i].reset_time() 
 
             elif not list_drone[0].state and not list_drone[-1].state:                                 # cas où on a les 2 en attentes 
-                print("On est dans le cas où aucun des drones n'est actif")
                 if  list_drone[-1].action_time >= charge_time:                             # si les drones du groupe 2 sont rechargés on les envoie
                     for drone in list_drone[int(len(list_drone)/2):]:
                         drone.toggle_state()
@@ -157,11 +202,15 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,v
             print("\n\n")
     return temps 
 
-"p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,vit_drone,charge_time,rau_beton,bat_capacity,bat_discharge,avg_amp"
-"""#toutes les unités sont selon le truc du système international
-dist = 5 #m
-rau_beton = 2400 #Kg/m^3 https://travauxbeton.fr/densite-ciment/ 
-volume_contruction = 1 #m^3 """
+"""
+config_1 = on envoie dans la première moitié du groupe puis on envoie la seconde et on alterne
+"""
+
+nb_drone = int(input("Nombre de drone : "))
+# print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,"config_2")))
+config_1 = f"Avec {nb_drone} dans la config 1 on a pris {main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,'config_1')}"
+config_2 = f"Avec {nb_drone} dans la config 2 on a pris {main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,'config_2')}"
+print(config_1)
+print(config_2)
 
 
-print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,400,4,5,5,30,0,0,0)))
