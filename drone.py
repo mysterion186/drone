@@ -1,5 +1,5 @@
 from termcolor import colored  #pour faciliter la lecture sinon c'est trop dur de lire 
-
+import matplotlib.pyplot as plt 
 
 
 class Drone :
@@ -194,23 +194,40 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,v
             drone.action_time = round(drone.action_time,2) 
 
         if active_drone != 0 : 
-            print("La valeur du temps "+colored(temps,"green") +" et celle du béton est "+colored(poids,"green") +" le nombre de drone actif est "+colored(active_drone,"green")) 
+            # print("La valeur du temps "+colored(temps,"green") +" et celle du béton est "+colored(poids,"green") +" le nombre de drone actif est "+colored(active_drone,"green")) 
             test = ""
             for k in range(len(list_drone)) :
                 test += str(k)+" " +str(list_drone[k].state)+ " "
-            print("l'état des drones est ",test)
-            print("\n\n")
+            # print("l'état des drones est ",test)
+            # print("\n\n")
     return temps 
 
 """
 config_1 = on envoie dans la première moitié du groupe puis on envoie la seconde et on alterne
 """
 
-nb_drone = int(input("Nombre de drone : "))
-# print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,"config_2")))
-config_1 = f"Avec {nb_drone} dans la config 1 on a pris {main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,'config_1')}"
-config_2 = f"Avec {nb_drone} dans la config 2 on a pris {main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,'config_2')}"
-print(config_1)
-print(config_2)
+# nb_drone = int(input("Nombre de drone : "))
+# # print("Le temps pour construire le mur est {} min ".format(main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,"config_2")))
+# config_1 = f"Avec {nb_drone} dans la config 1 on a pris {main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,'config_1')}"
+# config_2 = f"Avec {nb_drone} dans la config 2 on a pris {main(1.50,2,0,0,562,nb_drone,5,5,30,7.92,'config_2')}"
+# print(config_1)
+# print(config_2)
 
+nb_drone = []
+for k in range(3,101):
+    if k % 3 ==0 and k%2==0 :
+        nb_drone.append(k)
+
+temps_config_1 = [main(1.50,2,0,0,562,num,5,5,30,7.92,'config_1') for num in nb_drone]
+temps_config_2 = [main(1.50,2,0,0,562,num,5,5,30,7.92,'config_2') for num in nb_drone]
+
+# print(temps_config_1[0])
+# print(temps_config_2[0])
+plt.plot(nb_drone,temps_config_1,"r",label = "configuration 1")
+plt.plot(nb_drone,temps_config_2,label = "configuration 2")
+plt.title("Temps de construction selon la configuration 1 ou 2")
+plt.grid()
+plt.legend(loc='upper right', borderaxespad=0.)
+
+plt.show()
 
