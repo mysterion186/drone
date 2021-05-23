@@ -204,6 +204,8 @@ def main(p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,v
 
 """
 config_1 = on envoie dans la première moitié du groupe puis on envoie la seconde et on alterne
+config_2 = on envoie le premier tiers au milieu de l'autonomie on envoie le groupe 2 puis le dernier tiers
+p_drone,p_max_drone,p_parachute,p_sys,poids_contruction,nb_drone,dist,vit_drone,charge_time,autonomie,config
 """
 
 # nb_drone = int(input("Nombre de drone : "))
@@ -213,13 +215,24 @@ config_1 = on envoie dans la première moitié du groupe puis on envoie la secon
 # print(config_1)
 # print(config_2)
 
+p_drone = 1.50
+p_max_drone = 2 
+p_parachute = 0
+p_sys = 0
+poids_construction = 562
+dist = 5 
+vit_drone = 5
+charge_time = 30
+autonomie = 7.92
+
+
 nb_drone = []
 for k in range(3,101):
     if k % 3 ==0 and k%2==0 :
         nb_drone.append(k)
 
-temps_config_1 = [main(1.50,2,0,0,562,num,5,5,30,7.92,'config_1') for num in nb_drone]
-temps_config_2 = [main(1.50,2,0,0,562,num,5,5,30,7.92,'config_2') for num in nb_drone]
+temps_config_1 = [main(p_drone,p_max_drone,p_parachute,p_sys,poids_construction,num,dist,vit_drone,charge_time,autonomie,'config_1') for num in nb_drone]
+temps_config_2 = [main(p_drone,p_max_drone,p_parachute,p_sys,poids_construction,num,dist,vit_drone,charge_time,autonomie,'config_2') for num in nb_drone]
 
 # print(temps_config_1[0])
 # print(temps_config_2[0])
@@ -227,7 +240,10 @@ plt.plot(nb_drone,temps_config_1,"r",label = "configuration 1")
 plt.plot(nb_drone,temps_config_2,label = "configuration 2")
 plt.title("Temps de construction selon la configuration 1 ou 2")
 plt.grid()
+plt.xlabel("Nombre de drones")
+plt.ylabel("Temps en minutes")
 plt.legend(loc='upper right', borderaxespad=0.)
-
+plt.savefig("comparaison_config.png")
 plt.show()
+print("ne pas oublier de changer les valeurs de base comme travel time dans le main")
 

@@ -1,4 +1,3 @@
 test.py
 .DS_Store
-config_1.png
-config_2.png 
+*.png
