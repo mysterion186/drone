@@ -1,3 +1,14 @@
 test.py
 .DS_Store
 *.png
+*.pdf
+*.mp4
+*.odp
+cartographie/
+poster_final/
+vocal/ 
+*.eps
+*.ppt
+*.rar
+__pycache__ 
+graphique/ 
